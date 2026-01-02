@@ -1,0 +1,100 @@
+services:
+
+  ms-payroll-database:
+    image: mysql:8.0
+    container_name: ms-payroll-database
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - ${MYSQL_VOLUME}:/var/lib/mysql
+    networks:
+      - backend
+    healthcheck:
+      test: [
+        "CMD",
+        "mysqladmin",
+        "ping",
+        "-h",
+        "localhost",
+        "-u",
+        "root",
+        "-p${MYSQL_ROOT_PASSWORD}"
+      ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # -----------------------------
+  # Employee microservices
+  # -----------------------------
+  ms-payroll-employees-get:
+    &employees-service
+    build: ms-get
+    container_name: ms-payroll-employees-get
+    depends_on:
+      ms-payroll-database:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  ms-payroll-employees-post:
+    <<: *employees-service
+    build: ms-post
+    container_name: ms-payroll-employees-post
+
+  ms-payroll-employees-put:
+    <<: *employees-service
+    build: ms-put
+    container_name: ms-payroll-employees-put
+
+  ms-payroll-employees-delete:
+    <<: *employees-service
+    build: ms-delete
+    container_name: ms-payroll-employees-delete
+
+  # -----------------------------
+  # Nginx API Gateway
+  # -----------------------------
+  ms-payroll-api-gateway:
+    build: ms-api-gateway
+    container_name: ms-payroll-api-gateway
+    ports:
+      - "${NGINX_PORT}:80"
+    depends_on:
+      ms-payroll-employees-get:
+        condition: service_healthy
+      ms-payroll-employees-post:
+        condition: service_healthy
+      ms-payroll-employees-put:
+        condition: service_healthy
+      ms-payroll-employees-delete:
+        condition: service_healthy
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  mysql-payroll-data:
