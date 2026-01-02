@@ -1,0 +1,27 @@
+api-end-user [icon: user]
+
+DockerEngine [icon: aws-vpc] {
+  DockerNetwork-Backend {
+    ms-payroll-api-gateway [icon: nginx]
+    ms-payroll-employees-get [icon: spring]
+    ms-payroll-employees-post [icon: spring]
+    ms-payroll-employees-put [icon: spring]
+    ms-payroll-employees-delete [icon: spring]
+    ms-payroll-database [icon: mysql]
+    ms-payroll-volume [icon: database]
+  }
+}
+
+// relations
+
+api-end-user   - ms-payroll-api-gateway : /api/vx/employees
+ms-payroll-api-gateway - ms-payroll-employees-get : get,8080
+ms-payroll-api-gateway - ms-payroll-employees-post : post,8080
+ms-payroll-api-gateway - ms-payroll-employees-put : put,8080
+ms-payroll-api-gateway - ms-payroll-employees-delete : delete,8080
+ms-payroll-employees-get - ms-payroll-database : 3306
+ms-payroll-employees-post - ms-payroll-database : 3306
+ms-payroll-employees-put - ms-payroll-database : 3306
+ms-payroll-employees-delete - ms-payroll-database : 3306
+
+ms-payroll-database - ms-payroll-volume
