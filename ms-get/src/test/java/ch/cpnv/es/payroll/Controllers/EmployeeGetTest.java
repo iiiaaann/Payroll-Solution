@@ -8,9 +8,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -35,7 +39,9 @@ class EmployeeGetTest {
         employeeRepository.deleteAll();
 
         Employee employee = new Employee("Doe", "Supervisor");
+        Employee employee2 = new Employee("Smith", "Developer");
         existingEmployee = employeeRepository.save(employee);
+        employeeRepository.save(employee2);
     }
 
     @Test
@@ -61,25 +67,27 @@ class EmployeeGetTest {
     }
 
     @Test
-    void when_getting_nonexistent_employee_then_not_found() {
-        // GIVEN
-        Long nonExistentEmployeeId = 999L;
-
+    void when_getting_all_employees_then_success() {
         // WHEN
-        ResponseEntity<String> response =
-                restTemplate.getForEntity(
-                        "/api/v1/employees/{id}",
-                        String.class,
-                        nonExistentEmployeeId
+        ResponseEntity<List<Employee>> response =
+                restTemplate.exchange(
+                        "/api/v1/employees",
+                        HttpMethod.GET,
+                        null,
+                        new ParameterizedTypeReference<List<Employee>>() {}
                 );
 
         // THEN (HTTP)
         assertThat(response.getStatusCode())
-                .isEqualTo(HttpStatus.NOT_FOUND);
+                .isEqualTo(HttpStatus.OK);
 
-        // THEN (error message)
-        assertThat(response.getBody())
-                .isNotNull()
-                .contains("Could not find employee " + nonExistentEmployeeId);
+        // THEN (body)
+        List<Employee> body = response.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body).hasSizeGreaterThanOrEqualTo(2);
+
+        assertThat(body)
+                .extracting(Employee::getName)
+                .contains("Doe", "Smith");
     }
 }
