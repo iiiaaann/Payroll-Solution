@@ -1,12 +1,16 @@
 package ch.cpnv.es.payroll.Entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.util.Objects;
 
 @Entity
+@Table(
+        name = "employees",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = "name")
+        }
+)
 public class Employee {
 
     private @Id
