@@ -110,9 +110,6 @@ curl -X GET localhost/api/v1/employees
 
 ```
 //expected result (no employees)
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100     2    0     2    0     0     14      0 --:--:-- --:--:-- --:--:--    14
 []
 ```
 
