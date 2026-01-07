@@ -67,6 +67,11 @@ services:
     build: ms-delete
     container_name: ms-payroll-employees-delete
 
+  ms-payroll-employees-patch:
+    <<: *employees-service
+    build: ms-patch
+    container_name: ms-payroll-employees-patch
+
   # -----------------------------
   # Nginx API Gateway
   # -----------------------------
@@ -83,6 +88,8 @@ services:
       ms-payroll-employees-put:
         condition: service_healthy
       ms-payroll-employees-delete:
+        condition: service_healthy
+      ms-payroll-employees-patch:
         condition: service_healthy
     networks:
       - backend
